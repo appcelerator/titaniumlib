@@ -219,43 +219,47 @@ describe('sdk', () => {
 		it('should error if directory is invalid', () => {
 			expect(() => {
 				new TitaniumSDK();
-			}).to.throw(TypeError, 'Expected directory to be a valid string');
+			}).to.throw(TypeError, 'Expected Titanium SDK directory to be a non-empty string');
 
 			expect(() => {
 				new TitaniumSDK(123);
-			}).to.throw(TypeError, 'Expected directory to be a valid string');
+			}).to.throw(TypeError, 'Expected Titanium SDK directory to be a non-empty string');
 
 			expect(() => {
 				new TitaniumSDK('');
-			}).to.throw(TypeError, 'Expected directory to be a valid string');
+			}).to.throw(TypeError, 'Expected Titanium SDK directory to be a non-empty string');
 		});
 
 		it('should error if directory does not exist', () => {
+			const dir = path.join(__dirname, 'doesnotexist');
 			expect(() => {
-				new TitaniumSDK(path.join(__dirname, 'doesnotexist'));
-			}).to.throw(Error, 'Directory does not exist');
+				new TitaniumSDK(dir);
+			}).to.throw(Error, `Specified Titanium SDK directory does not exist: ${dir}`);
 		});
 
 		it('should error if directory has no manifest', () => {
 			expect(() => {
 				new TitaniumSDK(path.join(fixturesDir, 'empty'));
-			}).to.throw(Error, 'Directory does not contain a valid manifest');
+			}).to.throw(Error, 'Invalid Titanium SDK: No manifest.json found');
+		});
+
+		it('should error if directory has no package.json', () => {
+			expect(() => {
+				new TitaniumSDK(path.join(fixturesDir, 'sdk', 'manifestonly'));
+			}).to.throw(Error, 'Invalid Titanium SDK: No package.json found');
 		});
 
 		it('should error if manifest is not an object', () => {
 			expect(() => {
-				const x = new TitaniumSDK(path.join(fixturesDir, 'sdk', 'manifestisarray'));
-				console.log(x);
+				new TitaniumSDK(path.join(fixturesDir, 'sdk', 'manifestisarray'));
 			}).to.throw(Error, 'Directory does not contain a valid manifest');
 
 			expect(() => {
-				const x = new TitaniumSDK(path.join(fixturesDir, 'sdk', 'manifestisstring'));
-				console.log(x);
+				new TitaniumSDK(path.join(fixturesDir, 'sdk', 'manifestisstring'));
 			}).to.throw(Error, 'Directory does not contain a valid manifest');
 
 			expect(() => {
-				const x = new TitaniumSDK(path.join(fixturesDir, 'sdk', 'manifestisnumber'));
-				console.log(x);
+				new TitaniumSDK(path.join(fixturesDir, 'sdk', 'manifestisnumber'));
 			}).to.throw(Error, 'Directory does not contain a valid manifest');
 		});
 
@@ -264,6 +268,24 @@ describe('sdk', () => {
 			const sdkInfo = new TitaniumSDK(sdkPath);
 			expect(sdkInfo).to.deep.equal({
 				name: 'good',
+				package: {
+					name: 'titanium-mobile',
+					description: 'Appcelerator Titanium Mobile',
+					version: '9.0.3',
+					moduleApiVersion: {
+						iphone: '2',
+						android: '4'
+					},
+					keywords: [
+						'appcelerator',
+						'titanium',
+						'mobile',
+						'android',
+						'iphone',
+						'ipad',
+						'ios'
+					]
+				},
 				manifest: {
 					name: '7.0.2.v20180209105903',
 					version: '7.0.2',
@@ -326,7 +348,7 @@ describe('sdk', () => {
 				await sdk.getBranches();
 			} catch (e) {
 				expect(e).to.be.instanceOf(Error);
-				expect(e.message).to.match(/malformed JSON response/);
+				expect(e.message).to.match(/unexpected end of JSON input/i);
 				return;
 			}
 
@@ -340,7 +362,7 @@ describe('sdk', () => {
 				await sdk.getBranches();
 			} catch (e) {
 				expect(e).to.be.instanceOf(Error);
-				expect(e.message).to.match(/malformed JSON response/);
+				expect(e.message).to.match(/unexpected token {/i);
 				return;
 			}
 
@@ -354,7 +376,7 @@ describe('sdk', () => {
 				await sdk.getBranches();
 			} catch (e) {
 				expect(e).to.be.instanceOf(Error);
-				expect(e.message).to.equal('400 Bad Request');
+				expect(e.message).to.equal('Response code 400 (Bad Request)');
 				return;
 			}
 
@@ -490,6 +512,24 @@ describe('sdk', () => {
 						platforms: [
 							'iphone',
 							'android'
+						]
+					},
+					package: {
+						name: 'titanium-mobile',
+						description: 'Appcelerator Titanium Mobile',
+						version: '9.0.3',
+						moduleApiVersion: {
+							iphone: '2',
+							android: '4'
+						},
+						keywords: [
+							'appcelerator',
+							'titanium',
+							'mobile',
+							'android',
+							'iphone',
+							'ipad',
+							'ios'
 						]
 					},
 					path: path.join(fixturesDir, 'sdk', 'good')
@@ -636,6 +676,24 @@ describe('sdk', () => {
 						githash: '1234567890',
 						platforms: [ 'android' ]
 					},
+					package: {
+						description: 'Appcelerator Titanium Mobile',
+						keywords: [
+							'appcelerator',
+							'titanium',
+							'mobile',
+							'android',
+							'iphone',
+							'ipad',
+							'ios'
+						],
+						moduleApiVersion: {
+							android: '4',
+							iphone: '2'
+						},
+						name: 'titanium-mobile',
+						version: '0.0.0'
+					},
 					path: sdkDir
 				});
 
@@ -723,6 +781,24 @@ describe('sdk', () => {
 						githash: '1234567890',
 						platforms: [ 'android' ]
 					},
+					package: {
+						description: 'Appcelerator Titanium Mobile',
+						keywords: [
+							'appcelerator',
+							'titanium',
+							'mobile',
+							'android',
+							'iphone',
+							'ipad',
+							'ios'
+						],
+						moduleApiVersion: {
+							android: '4',
+							iphone: '2'
+						},
+						name: 'titanium-mobile',
+						version: '0.0.0'
+					},
 					path: sdkDir
 				});
 			} finally {
@@ -741,7 +817,7 @@ describe('sdk', () => {
 				});
 			} catch (e) {
 				expect(e).to.be.instanceOf(Error);
-				expect(e.message).to.equal('404 Not Found');
+				expect(e.message).to.equal('Response code 404 (Not Found)');
 				return;
 			} finally {
 				await fs.remove(tempDir);
@@ -776,6 +852,24 @@ describe('sdk', () => {
 						},
 						githash: '1234567890',
 						platforms: [ 'android' ]
+					},
+					package: {
+						description: 'Appcelerator Titanium Mobile',
+						keywords: [
+							'appcelerator',
+							'titanium',
+							'mobile',
+							'android',
+							'iphone',
+							'ipad',
+							'ios'
+						],
+						moduleApiVersion: {
+							android: '4',
+							iphone: '2'
+						},
+						name: 'titanium-mobile',
+						version: '0.0.0'
 					},
 					path: sdkDir
 				});
@@ -812,6 +906,24 @@ describe('sdk', () => {
 						githash: '1234567890',
 						platforms: [ 'android' ]
 					},
+					package: {
+						description: 'Appcelerator Titanium Mobile',
+						keywords: [
+							'appcelerator',
+							'titanium',
+							'mobile',
+							'android',
+							'iphone',
+							'ipad',
+							'ios'
+						],
+						moduleApiVersion: {
+							android: '4',
+							iphone: '2'
+						},
+						name: 'titanium-mobile',
+						version: '0.0.0'
+					},
 					path: sdkDir
 				});
 			} finally {
@@ -846,6 +958,24 @@ describe('sdk', () => {
 						},
 						githash: '1234567890',
 						platforms: [ 'android' ]
+					},
+					package: {
+						description: 'Appcelerator Titanium Mobile',
+						keywords: [
+							'appcelerator',
+							'titanium',
+							'mobile',
+							'android',
+							'iphone',
+							'ipad',
+							'ios'
+						],
+						moduleApiVersion: {
+							android: '4',
+							iphone: '2'
+						},
+						name: 'titanium-mobile',
+						version: '0.0.0'
 					},
 					path: sdkDir
 				});
@@ -883,7 +1013,25 @@ describe('sdk', () => {
 							windows: '6'
 						},
 						githash: '1234567890',
-						platforms: [ 'android' ]
+						platforms: [ 'android', 'iphone' ]
+					},
+					package: {
+						description: 'Appcelerator Titanium Mobile',
+						keywords: [
+							'appcelerator',
+							'titanium',
+							'mobile',
+							'android',
+							'iphone',
+							'ipad',
+							'ios'
+						],
+						moduleApiVersion: {
+							android: '4',
+							iphone: '2'
+						},
+						name: 'titanium-mobile',
+						version: '0.0.0'
 					},
 					path: sdkDir
 				});
@@ -947,7 +1095,25 @@ describe('sdk', () => {
 							windows: '6'
 						},
 						githash: '1234567890',
-						platforms: [ 'android' ]
+						platforms: [ 'android', 'iphone' ]
+					},
+					package: {
+						description: 'Appcelerator Titanium Mobile',
+						keywords: [
+							'appcelerator',
+							'titanium',
+							'mobile',
+							'android',
+							'iphone',
+							'ipad',
+							'ios'
+						],
+						moduleApiVersion: {
+							android: '4',
+							iphone: '2'
+						},
+						name: 'titanium-mobile',
+						version: '0.0.0'
 					},
 					path: sdkDir
 				});
@@ -985,7 +1151,25 @@ describe('sdk', () => {
 							windows: '6'
 						},
 						githash: '1234567890',
-						platforms: [ 'android' ]
+						platforms: [ 'android', 'iphone' ]
+					},
+					package: {
+						description: 'Appcelerator Titanium Mobile',
+						keywords: [
+							'appcelerator',
+							'titanium',
+							'mobile',
+							'android',
+							'iphone',
+							'ipad',
+							'ios'
+						],
+						moduleApiVersion: {
+							android: '4',
+							iphone: '2'
+						},
+						name: 'titanium-mobile',
+						version: '0.0.0'
 					},
 					path: sdkDir
 				});

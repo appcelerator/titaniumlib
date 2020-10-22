@@ -1,16 +1,14 @@
 import fs from 'fs-extra';
 import options from './options';
 import path from 'path';
-import request from 'request';
 import semver from 'semver';
 import snooplogg from 'snooplogg';
 import yauzl from 'yauzl';
-
+import * as request from '@axway/amplify-request';
 import { arch } from 'appcd-util';
 import { isFile } from 'appcd-fs';
-import { STATUS_CODES } from 'http';
 
-const { log } = snooplogg;
+const { log } = snooplogg('titaniumlib:util');
 const { highlight } = snooplogg.styles;
 
 /**
@@ -24,50 +22,6 @@ export const architecture = arch();
  * @type {String}
  */
 export const os = process.platform === 'darwin' ? 'osx' : process.platform;
-
-/**
- * Mixes the network options into the request params.
- *
- * @param {Object} params - Various request parameters.
- * @returns {Object}
- */
-export function buildRequestParams(params) {
-	const { network } = options;
-
-	if (!params.agentOptions && network.agentOptions) {
-		Object.assign(params.agentOptions, network.agentOptions);
-	}
-
-	if (!params.ca && network.caFile && isFile(network.caFile)) {
-		params.ca = fs.readFileSync(network.caFile);
-	}
-
-	if (!params.cert && network.certFile && isFile(network.certFile)) {
-		params.cert = fs.readFileSync(network.certFile);
-	}
-
-	if (!params.proxy && params.url && (network.httpsProxy || network.httpProxy)) {
-		if (/^https/.test(params.url)) {
-			params.proxy = network.httpsProxy || network.httpProxy;
-		} else {
-			params.proxy = network.httpProxy || network.httpsProxy;
-		}
-	}
-
-	if (!params.key && network.keyFile && isFile(network.keyFile)) {
-		params.key = fs.readFileSync(network.keyFile);
-	}
-
-	if (!params.passphrase && network.passphrase) {
-		params.passphrase = network.passphrase;
-	}
-
-	if (params.strictSSL === undefined && network.strictSSL !== undefined) {
-		params.strictSSL = network.strictSSL;
-	}
-
-	return params;
-}
 
 /**
  * Extracts a zip file to the specified destination.
@@ -192,32 +146,51 @@ export async function extractZip(params) {
  * @param {String} url - The URL to request.
  * @returns {Promise} Resolves the parsed body.
  */
-export function fetchJSON(url) {
-	return new Promise((resolve, reject) => {
-		log(`Fetching ${highlight(url)}`);
-		request(buildRequestParams({ method: 'GET', url }), (err, response, body) => {
-			if (err) {
-				return reject(err);
-			}
+export async function fetchJSON(url) {
+	log(`Fetching ${highlight(url)}`);
+	const got = request.init({ defaults: options.network });
+	return JSON.parse((await got(url, { retry: 0 })).body);
+}
 
-			// istanbul ignore if
-			if (!response) {
-				return reject(new Error('Request error: no response'));
-			}
+/**
+ * Tracks install tasks and their progress.
+ */
+export class TaskTracker {
+	constructor(callback, tasks) {
+		if (callback && typeof callback !== 'function') {
+			throw new TypeError('Expected progress callback to be a function');
+		}
+		this.callback = callback || (() => {});
+		this.tasks = tasks;
+		this.currentTask = 1;
+		this.currentProgress = 0;
+	}
 
-			const { statusCode } = response;
+	startTask(hasProgress = true) {
+		if (!this.sentTasks) {
+			this.sentTasks = true;
+			this.callback({ type: 'tasks', tasks: this.tasks });
+		}
 
-			if (statusCode >= 400) {
-				return reject(new Error(`${statusCode} ${STATUS_CODES[statusCode]}`));
-			}
+		this.callback({ hasProgress, task: this.currentTask, type: 'task-start' });
+	}
 
-			try {
-				resolve(JSON.parse(body));
-			} catch (e) {
-				reject(new Error('Request error: malformed JSON response'));
-			}
-		});
-	});
+	progress(value, force) {
+		const prev = this.currentProgress;
+		if (force || value - prev > 0.01) {
+			this.currentProgress = value;
+			this.callback({ task: this.currentTask, type: 'task-progress', progress: value });
+		}
+	}
+
+	endTask() {
+		if (this.currentProgress < 1) {
+			this.progress(1, true);
+		}
+		this.callback({ task: this.currentTask, type: 'task-end' });
+		this.currentTask++;
+		this.currentProgress = 0;
+	}
 }
 
 /**

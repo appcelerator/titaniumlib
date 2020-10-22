@@ -1,4 +1,4 @@
 import Project from './project';
-import TiappXML from './tiappxml';
+import Tiapp from './tiapp';
 
-export { Project, TiappXML };
+export { Project, Tiapp };

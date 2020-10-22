@@ -5,13 +5,10 @@
 const options = {
 	searchPaths: [],
 	network: {
-		agentOptions: null,
-		caFile: null,
-		certFile: null,
-		httpProxy: null,
-		httpsProxy: null,
-		keyFile: null,
-		passphrase: null,
+		caFile:    null,
+		certFile:  null,
+		keyFile:   null,
+		proxy:     null,
 		strictSSL: true
 	},
 	sdk: {

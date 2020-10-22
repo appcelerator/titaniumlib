@@ -1,3 +1,15 @@
+# v4.0.0
+
+ * BREAKING CHANGE: Dropped support for Node.js 10.12 and older.
+ * feat(project): Added implementation for managing, creating, building and cleaning projects.
+ * feat(templates): Bundled default project templates as dependencies and list them via a new
+   templates API.
+ * feat(sdk): Added `package` to `SDK` containing the contents of the `package.json`.
+ * feat(module): Added `install()` method.
+ * feat(tiapp): Added new `Tiapp` class with support for loading and saving the `tiapp.xml`.
+ * feat: Added HTTP proxy support.
+ * chore: Updated dependencies.
+
 # v3.0.1 (Sep 15, 2020)
 
  * fix(sdk): Preserve symlinks on extraction.

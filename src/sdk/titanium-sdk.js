@@ -1,8 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
-
 import { expandPath } from 'appcd-path';
-import { isDir } from 'appcd-fs';
+import { isDir, isFile } from 'appcd-fs';
 
 /**
  * Titanium SDK information object.
@@ -16,27 +15,36 @@ export default class TitaniumSDK {
 	 * @access public
 	 */
 	constructor(dir) {
-		if (typeof dir !== 'string' || !dir) {
-			throw new TypeError('Expected directory to be a valid string');
+		if (!dir || typeof dir !== 'string') {
+			throw new TypeError('Expected Titanium SDK directory to be a non-empty string');
 		}
 
 		dir = expandPath(dir);
 		if (!isDir(dir)) {
-			throw new Error('Directory does not exist');
+			throw new Error(`Specified Titanium SDK directory does not exist: ${dir}`);
 		}
 
-		this.name     = path.basename(dir);
-		this.manifest = null;
-		this.path     = dir;
+		this.name = path.basename(dir);
+		this.path = dir;
 
 		try {
-			const manifestFile = path.join(dir, 'manifest.json');
-			this.manifest = JSON.parse(fs.readFileSync(manifestFile));
-			if (!this.manifest || typeof this.manifest !== 'object' || Array.isArray(this.manifest)) {
-				throw new Error();
+			for (const type of [ 'manifest', 'package' ]) {
+				const file = path.join(dir, `${type}.json`);
+				if (!isFile(file)) {
+					throw new Error(`No ${type}.json found`);
+				}
+
+				try {
+					const obj = this[type] = fs.readJsonSync(file);
+					if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+						throw new Error();
+					}
+				} catch (e) {
+					throw new Error(`Directory does not contain a valid ${type}.json`);
+				}
 			}
-		} catch (e) {
-			throw new Error('Directory does not contain a valid manifest.json');
+		} catch (err) {
+			throw new Error(`Invalid Titanium SDK${err.message ? `: ${err.message}` : ''}`);
 		}
 	}
 }

@@ -4,17 +4,14 @@ if (!Error.prepareStackTrace) {
 }
 
 export { default as options } from './options';
+export { getInstallPaths, locations } from './locations';
+export { Project, Tiapp } from './project';
+export { templates } from './templates';
 
 import * as modules from './module';
-import * as project from './project';
 import * as sdk from './sdk';
 
-import { getInstallPaths, locations } from './locations';
-
 export {
-	getInstallPaths,
-	locations,
 	modules,
-	project,
 	sdk
 };

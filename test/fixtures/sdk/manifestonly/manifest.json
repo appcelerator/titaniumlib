@@ -1,0 +1,16 @@
+{
+    "name": "7.0.2.v20180209105903",
+    "version": "7.0.2",
+    "moduleAPIVersion": {
+      "iphone": "2",
+      "android": "4",
+      "windows": "4"
+    },
+    "timestamp": "2/9/2018 19:05",
+    "githash": "5ef0c56",
+    "platforms": [
+      "iphone",
+      "android"
+    ]
+  }
+  

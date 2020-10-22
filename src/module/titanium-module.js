@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
-
 import { expandPath } from 'appcd-path';
 import { isDir } from 'appcd-fs';
 
